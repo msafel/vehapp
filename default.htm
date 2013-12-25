@@ -1,0 +1,719 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=0.8, maximum-scale=2.0, user-scalable=yes">
+<script type="text/javascript">
+function aboutapp()
+{
+	alert("App for Vehicle's Price Discount Approval, Version:1.0.2");
+	}
+</script>
+<!-- <link rel="stylesheet" href="jquery.mobile-1.3.1.min.css"> -->
+
+<!-- Extra Codiqa features -->
+<!-- <link rel="stylesheet" href="codiqa.ext.css"> -->
+
+<!-- jQuery and jQuery Mobile -->
+<!-- <script src="jquery-1.9.1.min.js"></script> -->
+<!-- <script src="jquery.mobile-1.3.1.min.js"></script> -->
+
+<!-- Extra Codiqa features -->
+<!--   <script src="https://d10ajoocuyu32n.cloudfront.net/codiqa.ext.js"></script> -->
+
+<script type="text/javascript" src="datajs-1.0.3.js"></script>
+<script>
+	// Root URI for the service.
+	var serviceUri = "http://37.200.224.181/ias_relay_server/client/rs_client.dll/mobdev1MBS/com.ote.vehapproval/VEH_APRVL_SET?$filter=";
+	var index;//Index is global Variable filled by the index of row clicked
+	var EC; // Global Variable EC contains the Approvers Code
+	var SalesOrder; // Global Variable contains SO at Approved/Rejected Stage
+	var EnteredRemark;
+	var html;
+	var EC = window.localStorage.getItem("stored_empcode");
+	var seqno;
+	
+	function employeedata() {
+		var store_name = window.localStorage.getItem("stored_name");
+		var EMP = window.localStorage.getItem("stored_empcode");
+		var htmlw = "";
+		htmlw = " " + store_name;
+		document.getElementById("welcomename").innerHTML = htmlw;
+		// Root URI for the service.
+		var serviceUri = "http://37.200.224.181/ias_relay_server/client/rs_client.dll/mobdev1MBS/com.ote.vehapproval/VEH_APRVL_SET?$filter=";
+		var index;//Index is global Variable filled by the index of row clicked
+		var EC; // Global Variable EC contains the Approvers Code
+		var SalesOrder; // Global Variable contains SO at Approved/Rejected Stage
+		var EnteredRemark;
+		var html;
+
+		var requestUriList = serviceUri + "((Xuse eq 'C') and (XEmp_Code eq '"
+				+ EMP + "'))" + "&$format=json";
+
+		var strUsername = "OTEPORTAL";
+		var strPassword = "User1234";
+		var oHeaders = {};
+		oHeaders['Authorization'] = "Basic "
+				+ btoa(strUsername + ":" + strPassword);
+		var request = {
+			headers : oHeaders, // object that contains HTTP headers as name value pairs 
+			requestUri : requestUriList, // OData endpoint URI 
+			method : "GET",
+			datatype : "json"
+
+		};
+
+		OData
+				.read(
+						request,
+						function(data) {
+							//Success Callback (Received data is an Entry): 
+							html = "<div style=' font-family: arial;''><font size='3' > The List Of Pending Orders</font></div>";
+							if (data.results.length == 0) {
+								html += "<em> Pending Orders Not Found.</em></div>";
+							} else {
+								EC = data.results[0].XEmp_Code;
+								//                 for ( var i = 0; i < data.results.length; i++) {
+								//                     html += "<a href='#' onclick='clicked(this);' id='id_link" + i
+								//                             + "' ><b>Employee Code: </b>"
+								//                             + data.results[i].SO_No + "</a><br/>" + "</div>";
+								//                 }                
+								//Assuming your HTML page has DIV element with id ‘target-element-id’
+
+                                html += "<table id='job_labour_table_id' border='0' cellpadding='6'><col width='120px' /><col width='150px' /><col width='150px' /><tr><th class='header'>"
+                                        + "Sales Order"
+                                        + "</th><th class='header'>"
+                                        + "Division"
+                                        + "</th><th class='header'>"
+                                        + "Sales Office" + "</th></tr>";
+								for ( var i = 0; i < data.results.length; i++) {
+
+                                    html += "<tr><td class='row'>"
+                                            + "<b><a href='#' onclick='clicked(this);' id='id_link"
+                                            + i + "' >" + data.results[i].SO_No
+                                            + "</a></b>" + "</td><td class='row'>"
+                                            + data.results[i].Divisn
+                                            + "</td><td class='row'>"
+                                            + data.results[i].Description
+                                            + "</td></tr>";
+
+								}
+								html += "</table></div>";
+							}
+							document.getElementById("input").innerHTML = html;
+						}, function(err) {
+							//Error Callback: 
+							alert("NO Internet");
+						});
+		//         var html = "";
+		//         html += "<div><h3> The List Of Pending Orders</h3>" + "<a href='#' id='id_link"
+		//                 + "' onclick='clicked(this);'><b>Employee Code: </b>"
+		//                 + "0000002160" + "</a><br/>" + "</div>";
+		//         document.getElementById("input").innerHTML = html;
+	}	
+	function clicked(val) {
+		var id = val.attributes[2].value;
+		var attr = document.getElementById(id).innerHTML;
+		var sorder = attr.substr(0, 10);
+		//         var textURL = document.getElementById(id).outerHTML;
+		//         EC = textURL.substr(34, 8);
+		index = id.substr(7, 3); //Index is global Variable filled by the index of row clicked
+		//alert(n);
+		getOrderDetails(sorder);
+		// Passing Sales Order and Approvers Code
+	}
+	function getOrderDetails(SO) {
+		// URL for Get Carrier. 
+		SalesOrder = SO;
+		document.getElementById("output").hidden = false;
+		document.getElementById("input").hidden = true;
+		//var ECOD = ECD;
+		var requestUri = serviceUri + "((Xuse eq 'R') and (XEmp_Code eq '" + EC
+				+ "') and (SO_No eq '" + SO + "'))" + "&$format=json";
+
+		var strUsername = "oteportal";
+		var strPassword = "User1234";
+		var oHeaders = {};
+		oHeaders['Authorization'] = "Basic "
+				+ btoa(strUsername + ":" + strPassword);
+		var request = {
+			headers : oHeaders, // object that contains HTTP headers as name value pairs 
+			requestUri : requestUri, // OData endpoint URI 
+			method : "GET",
+			datatype : "json"
+
+		};
+
+		// Send the request and define callback methods. 
+		OData
+				.read(
+						//requestUri, 
+
+						request,
+						function(data) {
+							//Success Callback (Received data is an Entry): 
+							// Variable Clearing 
+							document.getElementById("NXTAPRVR").value = "";
+							document.getElementById("ETRMRKS").value = "";
+							// Variable Clearing 
+							document.getElementById("SO").value = data.results[index].SO_No;
+							document.getElementById("BOOKDT").value = data.results[index].BookDate;
+							//document.getElementById("CURR").value = data.results[index].Currency;
+							document.getElementById("LOCN").value = data.results[index].Description;
+							//document.getElementById("CRBY").value = data.results[index].Transaction_Person;
+							//document.getElementById("SCONS").value = data.results[index].Sales_Rep_Code;
+							document.getElementById("SCONSN").value = data.results[index].Sales_Rep;
+							//document.getElementById("CUST").value = data.results[index].Customer_No;
+							document.getElementById("CUSTN").value = data.results[index].Customer_Name;
+							if (data.results[index].Seq_No == "1"
+									&& data.results[index].Employee_Code != "") {
+								document.getElementById("NXTAPRVR").value = "Next Approval By: Mr. "
+										+ data.results[index].Employee_Code;
+								seqno = "1";
+							} 
+                            else if (data.results[index].Seq_No == "1"
+                                && data.results[index].Employee_Code == "") {
+                                document.getElementById("ETRMRKS").value = data.results[index].Zremark;
+                                document.getElementById("NXTAPRVR").value = "Single Level Approval";
+                                seqno = "1";
+                            }
+                            else if (data.results[index].Zstatus == "B") {
+                            	var lv_remark = data.results[index].Zremark.replace(" Via MobApp" , "");
+                                document.getElementById("ETRMRKS").value = lv_remark;
+                                document.getElementById("NXTAPRVR").value = "Last Approved By: Mr. "
+                                        + data.results[index].Employee_Code;
+                                seqno = "B";
+                            }
+							document.getElementById("VIN").value = data.results[index].VIN;
+							//document.getElementById("YEAR").value = data.results[index].Model_Year;
+							document.getElementById("VMOD").value = data.results[index].Ymodel;
+							document.getElementById("SPRC").value = data.results[index].YDiff;
+							document.getElementById("MVALUE").value = data.results[index].Base_Price;
+							document.getElementById("RDIS").value = data.results[index].Discount;
+
+						}, function(err) {
+							//Error Callback: 
+							alert("NO Internet");
+						});
+	}
+	function Approved() {
+		if (seqno == "1") {
+			EnteredRemark = document.getElementById("ETRMRKS").value
+					+ " Via MobApp";
+		} else {
+			EnteredRemark = document.getElementById("ETRMRKS").value 
+					+ " Via MobApp";
+		}
+		seqno = "";
+		// URL for Get Carrier. 
+		document.getElementById("output").hidden = false;
+		document.getElementById("input").hidden = true;
+		//var ECOD = ECD;
+		var requestUri = serviceUri + "((Xuse eq 'U') and (XEmp_Code eq '" + EC
+				+ "') and (SO_No eq '" + SalesOrder
+				+ "') and (Xaction eq 'A') and (Xremark eq '" + EnteredRemark
+				+ "'))" + "&$format=json";
+
+		// Send the request and define callback methods. 
+		var strUsername = "oteportal";
+		var strPassword = "User1234";
+		var oHeaders = {};
+		oHeaders['Authorization'] = "Basic "
+				+ btoa(strUsername + ":" + strPassword);
+		var request = {
+			headers : oHeaders, // object that contains HTTP headers as name value pairs 
+			requestUri : requestUri, // OData endpoint URI 
+			method : "GET",
+			datatype : "json"
+
+		};
+		OData.read(
+		//requestUri, 
+
+		request, function(data) {
+			//Success Callback (Received data is an Entry): 
+			//                             document.getElementById("SO").value = data.results[index].SO_No;
+			//                             document.getElementById("BOOKDT").value = data.results[index].BookDate;
+			//                             document.getElementById("CURR").value = data.results[index].Currency;
+			//                             document.getElementById("LOCN").value = data.results[index].Description;
+			//                             document.getElementById("CRBY").value = data.results[index].Transaction_Person;
+			//                             document.getElementById("SCONS").value = data.results[index].Sales_Rep_Code;
+			//                             document.getElementById("SCONSN").value = data.results[index].Sales_Rep;
+			//                             document.getElementById("CUST").value = data.results[index].Customer_No;
+			//                             document.getElementById("CUSTN").value = data.results[index].Customer_Name;
+			//                             document.getElementById("NXTAPRVR").value = data.results[index].Employee_Code;
+			//                             document.getElementById("VIN").value = data.results[index].VIN;
+			//                             document.getElementById("YEAR").value = data.results[index].Model_Year;
+			//                             document.getElementById("VMOD").value = data.results[index].Ymodel;
+			//                             document.getElementById("SPRC").value = data.results[index].YDiff;
+			//                             document.getElementById("MVALUE").value = data.results[index].Base_Price;
+			//                             document.getElementById("RDIS").value = data.results[index].Discount;
+			// document.getElementById("ETRMRKS").value = data.results[index].Yremarks;
+			if (index != null) {
+				alert("Approved");
+				document.getElementById("output").hidden = true;
+				document.getElementById("input").hidden = false;
+				document.getElementById("ETRMRKS").value = "";
+				employeedata(); // this will call the current Pending Order List
+			}
+		}, function(err) {
+			//Error Callback: 
+			alert("NO Internet");
+		});
+
+	}
+	function Rejected() {
+		if (seqno == "1") {
+			EnteredRemark = document.getElementById("ETRMRKS").value
+					+ " Via MobApp";
+		} else {
+			EnteredRemark = document.getElementById("ETRMRKS").value
+					+ " Via MobApp";
+		}
+		seqno = "";
+
+		// URL for Get Carrier. 
+		document.getElementById("output").hidden = false;
+		document.getElementById("input").hidden = true;
+		//var ECOD = ECD;
+		var requestUri = serviceUri + "((Xuse eq 'U') and (XEmp_Code eq '" + EC
+				+ "') and (SO_No eq '" + SalesOrder
+				+ "') and (Xaction eq 'R') and (Xremark eq '" + EnteredRemark
+				+ "'))" + "&$format=json";
+
+		// Send the request and define callback methods. 
+		var strUsername = "oteportal";
+		var strPassword = "User1234";
+		var oHeaders = {};
+		oHeaders['Authorization'] = "Basic "
+				+ btoa(strUsername + ":" + strPassword);
+		var request = {
+			headers : oHeaders, // object that contains HTTP headers as name value pairs 
+			requestUri : requestUri, // OData endpoint URI 
+			method : "GET",
+			datatype : "json"
+
+		};
+		OData.read(
+		//requestUri, 
+		request, function(data) {
+			//Success Callback (Received data is an Entry): 
+			//                             document.getElementById("SO").value = data.results[index].SO_No;
+			//                             document.getElementById("BOOKDT").value = data.results[index].BookDate;
+			//                             document.getElementById("CURR").value = data.results[index].Currency;
+			//                             document.getElementById("LOCN").value = data.results[index].Description;
+			//                             document.getElementById("CRBY").value = data.results[index].Transaction_Person;
+			//                             document.getElementById("SCONS").value = data.results[index].Sales_Rep_Code;
+			//                             document.getElementById("SCONSN").value = data.results[index].Sales_Rep;
+			//                             document.getElementById("CUST").value = data.results[index].Customer_No;
+			//                             document.getElementById("CUSTN").value = data.results[index].Customer_Name;
+			//                             document.getElementById("NXTAPRVR").value = data.results[index].Employee_Code;
+			//                             document.getElementById("VIN").value = data.results[index].VIN;
+			//                             document.getElementById("YEAR").value = data.results[index].Model_Year;
+			//                             document.getElementById("VMOD").value = data.results[index].Ymodel;
+			//                             document.getElementById("SPRC").value = data.results[index].YDiff;
+			//                             document.getElementById("MVALUE").value = data.results[index].Base_Price;
+			//                             document.getElementById("RDIS").value = data.results[index].Discount;
+			// document.getElementById("ETRMRKS").value = data.results[index].Yremarks;
+			if (index != null) {
+				alert("Rejected");
+				document.getElementById("output").hidden = true;
+				document.getElementById("input").hidden = false;
+				document.getElementById("ETRMRKS").value = "";
+				employeedata(); // this will call the current Pending Order List                              
+			}
+		}, function(err) {
+			//Error Callback: 
+			alert("NO Internet");
+		});
+
+	}
+	function Back() {
+		document.getElementById("output").hidden = true;
+		document.getElementById("input").hidden = false;
+		employeedata();
+	}
+</script>
+<!-- script ends here 
+*
+*
+*
+*
+*
+*script ends here -->
+
+<style>
+.logo { /*background-color: #F8F8FF;*/
+	border-radius: 5px 5px 5px 5px;
+	font-family: Futura, Arial;
+	/* 	text-shadow: 0px 0px 7px rgba(0, 0, 0, 0.75); */
+	color: inherit;
+	height:10px;
+}
+
+.header {
+    height: 20px;
+	color: white;
+	background-color: #005C99;
+	border-radius: 5px 5px 5px 5px;
+	text-shadow: 0px 0px 7px rgba(0, 0, 0, 0.26);
+    font-family: Futura, Arial;
+	font-size:16px;	
+	/* 	font-family: 'PT Sans', arial, serif; */
+	/* 	color:#ffffff; */
+	/* 	text-align:center; */
+
+	/* 	font-weight:bold; */
+	/* 	padding:10px; */
+	/* text-shadow: /-- Simulating Text Stroke --/
+       -1px -1px 0 #000,
+        1px -1px 0 #000,  
+         -1px 1px 0 #000,  
+         1px 1px 0 #000;  */
+	border: 1px solid rgba(0, 0, 0, 0.5);
+	border-bottom: 3px solid rgba(0, 0, 0, 0.5);
+	-webkit-border-radius: 8px;
+	-moz-border-radius: 3px;
+	border-radius: 10px;
+	/* background: rgba(0, 0, 0, 0.25); */
+	-o-box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5), inset 0 1px
+		rgba(255, 255, 255, 0.3), inset 0 10px rgba(255, 255, 255, 0.2), inset
+		0 10px 20px rgba(255, 255, 255, 0.25), inset 0 -15px 30px
+		rgba(0, 0, 0, 0.3);
+	-webkit-box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5), inset 0 1px
+		rgba(255, 255, 255, 0.3), inset 0 10px rgba(255, 255, 255, 0.2), inset
+		0 10px 20px rgba(255, 255, 255, 0.25), inset 0 -15px 30px
+		rgba(0, 0, 0, 0.3);
+	-moz-box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5), inset 0 1px
+		rgba(255, 255, 255, 0.3), inset 0 10px rgba(255, 255, 255, 0.2), inset
+		0 10px 20px rgba(255, 255, 255, 0.25), inset 0 -15px 30px
+		rgba(0, 0, 0, 0.3);
+	box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5), /* Exterior Shadow */  
+          inset 0 1px rgba(255, 255, 255, 0.3), /* Top light Line */  
+          inset 0 10px rgba(255, 255, 255, 0.2), /* Top Light Shadow */
+		 
+          inset 0 10px 20px rgba(255, 255, 255, 0.25),
+		/* Sides Light Shadow */  
+          inset 0 -15px 30px rgba(0, 0, 0, 0.3); /* Dark Background */
+}
+
+.row {
+	color: black;
+	background-color: #99C2FF;
+	border-radius: 5px 5px 5px 5px;
+	font-family: Futura, Arial;
+	font-size:14px;		
+	text-shadow: 0px 0px 7px rgba(0, 0, 0, 0.2);
+	text-align:center; 
+	
+	/* 	font-family: 'PT Sans', arial, serif; */
+	/* 	color:#ffffff; */
+	/* 	text-align:center; */
+	/* 	font-size:20px; */
+	/* 	font-weight:bold; */
+	/* 	padding:10px; */
+	/* text-shadow: /-- Simulating Text Stroke --/
+       -1px -1px 0 #000,
+        1px -1px 0 #000,  
+         -1px 1px 0 #000,  
+         1px 1px 0 #000;  */
+	border: 1px solid rgba(0, 0, 0, 0.5);
+	border-bottom: 3px solid rgba(0, 0, 0, 0.5);
+	-webkit-border-radius: 8px;
+	-moz-border-radius: 3px;
+	border-radius: 10px;
+	/* background: rgba(0, 0, 0, 0.25); */
+	-o-box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5), inset 0 1px
+		rgba(255, 255, 255, 0.3), inset 0 10px rgba(255, 255, 255, 0.2), inset
+		0 10px 20px rgba(255, 255, 255, 0.25), inset 0 -15px 30px
+		rgba(0, 0, 0, 0.3);
+	-webkit-box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5), inset 0 1px
+		rgba(255, 255, 255, 0.3), inset 0 10px rgba(255, 255, 255, 0.2), inset
+		0 10px 20px rgba(255, 255, 255, 0.25), inset 0 -15px 30px
+		rgba(0, 0, 0, 0.3);
+	-moz-box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5), inset 0 1px
+		rgba(255, 255, 255, 0.3), inset 0 10px rgba(255, 255, 255, 0.2), inset
+		0 10px 20px rgba(255, 255, 255, 0.25), inset 0 -15px 30px
+		rgba(0, 0, 0, 0.3);
+	box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5), /* Exterior Shadow */  
+          inset 0 1px rgba(255, 255, 255, 0.3), /* Top light Line */  
+          inset 0 10px rgba(255, 255, 255, 0.2), /* Top Light Shadow */
+		 
+          inset 0 10px 20px rgba(255, 255, 255, 0.25),
+		/* Sides Light Shadow */  
+          inset 0 -15px 30px rgba(0, 0, 0, 0.3); /* Dark Background */
+}
+
+
+.input1 {
+	display:inline-block;
+	height: auto;
+	width: 35%;
+	color: black;
+	background-color: #99C2FF;
+	text-shadow: 0px 0px 7px rgba(0, 0, 0, 0.26);
+	font-family: 'PT Sans', arial;
+	font-size:12px;	
+	vertical-align:top;
+	/* 	color:#ffffff; */
+	/* 	text-align:center; */
+	/* 	font-size:20px; */
+	/* 	font-weight:bold; */
+	/* 	padding:10px; */
+	/* text-shadow: /-- Simulating Text Stroke --/
+       -1px -1px 0 #000,
+        1px -1px 0 #000,  
+         -1px 1px 0 #000,  
+         1px 1px 0 #000;  */
+	border: 1px solid rgba(0, 0, 0, 0.5);
+	border-bottom: 3px solid rgba(0, 0, 0, 0.5);
+	-webkit-border-radius: 8px;
+	-moz-border-radius: 3px;
+	border-radius: 2px;
+	/* background: rgba(0, 0, 0, 0.25); */
+	-o-box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5), inset 0 1px
+		rgba(255, 255, 255, 0.3), inset 0 10px rgba(255, 255, 255, 0.2), inset
+		0 10px 20px rgba(255, 255, 255, 0.25), inset 0 -15px 30px
+		rgba(0, 0, 0, 0.3);
+	-webkit-box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5), inset 0 1px
+		rgba(255, 255, 255, 0.3), inset 0 10px rgba(255, 255, 255, 0.2), inset
+		0 10px 20px rgba(255, 255, 255, 0.25), inset 0 -15px 30px
+		rgba(0, 0, 0, 0.3);
+	-moz-box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5), inset 0 1px
+		rgba(255, 255, 255, 0.3), inset 0 10px rgba(255, 255, 255, 0.2), inset
+		0 10px 20px rgba(255, 255, 255, 0.25), inset 0 -15px 30px
+		rgba(0, 0, 0, 0.3);
+	box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5), /* Exterior Shadow */  
+          inset 0 1px rgba(255, 255, 255, 0.3), /* Top light Line */  
+          inset 0 10px rgba(255, 255, 255, 0.2), /* Top Light Shadow */
+		 
+          inset 0 10px 20px rgba(255, 255, 255, 0.25),
+		/* Sides Light Shadow */  
+          inset 0 -15px 30px rgba(0, 0, 0, 0.3); /* Dark Background */
+}
+.input2 {
+    display:inline-block;
+	height: auto;
+	width: 60%;
+	color: black;
+	background-color: #99C2FF;
+	text-shadow: 0px 0px 7px rgba(0, 0, 0, 0.26);
+	padding-left: 7px;
+	font-family:'PT Sans', arial;
+	font-size:10px;	
+	vertical-align:top;
+	/* 	color:#ffffff; */
+	/* 	text-align:center; */
+	/* 	font-size:20px; */
+	/* 	font-weight:bold; */
+	/* 	padding:10px; */
+	/* text-shadow: /-- Simulating Text Stroke --/
+       -1px -1px 0 #000,
+        1px -1px 0 #000,  
+         -1px 1px 0 #000,  
+         1px 1px 0 #000;  */
+	border: 1px solid rgba(0, 0, 0, 0.5);
+	border-bottom: 3px solid rgba(0, 0, 0, 0.5);
+	-webkit-border-radius: 8px;
+	-moz-border-radius: 3px;
+	border-radius: 2px;
+	/* background: rgba(0, 0, 0, 0.25); */
+	-o-box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5), inset 0 1px
+		rgba(255, 255, 255, 0.3), inset 0 10px rgba(255, 255, 255, 0.2), inset
+		0 10px 20px rgba(255, 255, 255, 0.25), inset 0 -15px 30px
+		rgba(0, 0, 0, 0.3);
+	-webkit-box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5), inset 0 1px
+		rgba(255, 255, 255, 0.3), inset 0 10px rgba(255, 255, 255, 0.2), inset
+		0 10px 20px rgba(255, 255, 255, 0.25), inset 0 -15px 30px
+		rgba(0, 0, 0, 0.3);
+	-moz-box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5), inset 0 1px
+		rgba(255, 255, 255, 0.3), inset 0 10px rgba(255, 255, 255, 0.2), inset
+		0 10px 20px rgba(255, 255, 255, 0.25), inset 0 -15px 30px
+		rgba(0, 0, 0, 0.3);
+	box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5), /* Exterior Shadow */  
+          inset 0 1px rgba(255, 255, 255, 0.3), /* Top light Line */  
+          inset 0 10px rgba(255, 255, 255, 0.2), /* Top Light Shadow */
+		 
+          inset 0 10px 20px rgba(255, 255, 255, 0.25),
+		/* Sides Light Shadow */  
+          inset 0 -15px 30px rgba(0, 0, 0, 0.3); /* Dark Background */
+}
+.btn {
+    display:inline-block;
+	height: 30px;
+	width: 31.5%;
+	color: white;
+	
+	border-radius: 5px 5px 5px 5px;
+	text-shadow: 0px 0px 7px rgba(0, 0, 0, 0.26);
+	 	font-family: arial; 
+
+	 	text-align:center; 
+	 	font-size:16px; 
+	 	font-weight:bold; 
+	 	padding:4px; 
+	/* text-shadow: /-- Simulating Text Stroke --/
+       -1px -1px 0 #000,
+        1px -1px 0 #000,  
+         -1px 1px 0 #000,  
+         1px 1px 0 #000;  */
+	border: 1px solid rgba(0, 0, 0, 0.5);
+	border-bottom: 3px solid rgba(0, 0, 0, 0.5);
+	-webkit-border-radius: 8px;
+	-moz-border-radius: 3px;
+	border-radius: 10px;
+	/* background: rgba(0, 0, 0, 0.25); */
+	-o-box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5), inset 0 1px
+		rgba(255, 255, 255, 0.3), inset 0 10px rgba(255, 255, 255, 0.2), inset
+		0 10px 20px rgba(255, 255, 255, 0.25), inset 0 -15px 30px
+		rgba(0, 0, 0, 0.3);
+	-webkit-box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5), inset 0 1px
+		rgba(255, 255, 255, 0.3), inset 0 10px rgba(255, 255, 255, 0.2), inset
+		0 10px 20px rgba(255, 255, 255, 0.25), inset 0 -15px 30px
+		rgba(0, 0, 0, 0.3);
+	-moz-box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5), inset 0 1px
+		rgba(255, 255, 255, 0.3), inset 0 10px rgba(255, 255, 255, 0.2), inset
+		0 10px 20px rgba(255, 255, 255, 0.25), inset 0 -15px 30px
+		rgba(0, 0, 0, 0.3);
+	box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5), /* Exterior Shadow */  
+          inset 0 1px rgba(255, 255, 255, 0.3), /* Top light Line */  
+          inset 0 10px rgba(255, 255, 255, 0.2), /* Top Light Shadow */
+		 
+          inset 0 10px 20px rgba(255, 255, 255, 0.25),
+		/* Sides Light Shadow */  
+          inset 0 -15px 30px rgba(0, 0, 0, 0.3); /* Dark Background */
+}
+</style>
+
+</head>
+<body onload="employeedata()">
+	<!-- ****************************** -->
+	<!-- Home -->
+	<div class="container" style="width: 360px;">
+	    <div data-role="page" id="page1" style="width:100%;">
+		<div data-role="content">
+			<div>
+			<img border="0" src="AboutIcon.png" height="15px" onclick="aboutapp()" style="float: right;">
+				<table>
+					<tr>
+						<td class="logo"><img border="0" src="logo_ote.png" height="60px">
+						</td>
+						<td class="logo" height="60px" width="200px"><br>
+							<font size="2" id=""><b>Vehicle Price Approval</b><br>Welcome </font>
+							<font size="2" id="welcomename"></font><br><br>
+						</td>
+					</tr>
+				</table>
+			</div>
+			<form action="" id="input">
+			</form>
+		</div>
+		<div data-role="content">
+			<form action="" id="output" hidden="true"
+				style="background-image: url('Watermark.png'); background-repeat: no-repeat; background-position: left;">
+				<div data-role="fieldcontain" class="VMOD">
+					<label for="VMOD" class="input1"><b>Vehicle Model</b></label> <input
+						name="VMOD" class="input2" id="VMOD" placeholder="" value=""
+						type="text" data-mini="true" readonly="readonly">
+				</div>
+
+				<div data-role="fieldcontain" class="MVALUE">
+					<label for="MVALUE" class="input1"> <b>Minimum Value</b> </label> <input
+						name="MVALUE" id="MVALUE" placeholder="" value="" type="text" value="" style="text-indent: 12px;"
+						class="input2" data-mini="true" readonly="readonly">
+				</div>
+				<div data-role="fieldcontain" class="SPRC">
+					<label for="SPRC" class="input1"> <b>Sale Price</b> </label> <input
+						name="SPRC" class="input2" id="SPRC" placeholder="" value="" style="text-indent: 16px;"
+						type="text" data-mini="true" readonly="readonly">
+				</div>
+				<div data-role="fieldcontain">
+					<label for="RDIS" class="input1"> <b>Requested Discount</b>
+					</label> <input name="RDIS" id="RDIS" placeholder="" value="" type="text" value="" style="text-indent: 21px;"
+						class="input2" 
+						data-mini="true" readonly="readonly">
+				</div>
+				<div data-role="fieldcontain">
+					<label for="SO" class="input1"> <b>Sales Order No.</b> </label> <input
+						name="SO" class="input2" id="SO" placeholder="" value=""
+						type="text" data-mini="true" readonly="readonly">
+				</div>
+				<div data-role="fieldcontain">
+					<label for="BOOKDT" class="input1"> <b>Date</b> </label> <input
+						name="BOOKDT" class="input2" id="BOOKDT" placeholder="" value=""
+						type="text" data-mini="true" readonly="readonly">
+				</div>
+
+				<div data-role="fieldcontain" class="LOCN">
+					<label for="LOCN" class="input1"> <b>Sales Office</b> </label> <input
+						name="LOCN" class="input2" id="LOCN" placeholder="" value=""
+						type="text" data-mini="true" readonly="readonly">
+				</div>
+				<!-- 				<div data-role="fieldcontain" class="CRBY"> -->
+				<!-- 					<label for="CRBY"> <b>Created By</b> </label> <input name="CRBY" -->
+				<!-- 						id="CRBY" placeholder="" value="" type="text" data-mini="true" -->
+				<!-- 						readonly="readonly"> -->
+				<!-- 				</div> -->
+
+				<!-- 				<div data-role="fieldcontain" class="SCONS"> -->
+				<!-- 					<label for="SCONS"> <b>Sales Consultant</b> </label> <input -->
+				<!-- 						name="SCONS" id="SCONS" placeholder="" value="" type="text" -->
+				<!-- 						data-mini="true" readonly="readonly"> -->
+				<!-- 				</div> -->
+				<div data-role="fieldcontain" class="SCONSN">
+					<label for="SCONSN" class="input1"> <b>Sales Consultant</b>
+					</label> <input name="SCONSN" id="SCONSN" placeholder="" value=""
+						type="text" class="input2" data-mini="true" readonly="readonly">
+				</div>
+				<!-- 				<div data-role="fieldcontain" class="CUST"> -->
+				<!-- 					<label for="CUST"> <b>Customer</b> </label> <input name="CUST" -->
+				<!-- 						id="CUST" placeholder="" value="" type="text" data-mini="true" -->
+				<!-- 						readonly="readonly"> -->
+				<!-- 				</div> -->
+				<div data-role="fieldcontain" class="CUSTN">
+					<label for="CUSTN" class="input1"> <b>Customer Name</b> </label> <input
+						name="CUSTN" id="CUSTN" placeholder="" value="" type="text"
+						class="input2" data-mini="true" readonly="readonly">
+				</div>
+				<div data-role="fieldcontain" class="VIN">
+					<label for="VIN" class="input1"> <b>VIN</b> </label> <input
+						name="VIN" id="VIN" class="input2" placeholder="" value=""
+						type="text" data-mini="true" readonly="readonly">
+				</div>
+				<div data-role="fieldcontain" class="NXTAPRVR">
+					<label for="NXTAPRVR" class="input1"> <b>System Message</b>
+					</label> <input name="NXTAPRVR" id="NXTAPRVR" placeholder="" value=""
+						type="text" class="input2"
+						data-mini="true"
+						readonly="readonly">
+				</div>
+				<div >
+					<label for="ETRMRKS" class="input1" style="height: 40px; vertical-align: top;"> <b>Remarks</b> </label>
+					<textarea class="input2" name="ETRMRKS" id="ETRMRKS" style="background-color: #CCF5FF; height: 36px;vertical-align: top;"
+						placeholder="Enter Remarks Here"></textarea>
+				</div>				
+				<!-- 				<div data-role="fieldcontain" class="YEAR"> -->
+				<!-- 					<label for="YEAR"> <b>Year</b> </label> <input name="YEAR" -->
+				<!-- 						id="YEAR" placeholder="" value="" type="text" data-mini="true" -->
+				<!-- 						readonly="readonly"> -->
+				<!-- 				</div> -->
+				<div data-role="fieldcontain">
+
+					<div>
+						<input class="btn" id="btnApprove" type="button"
+							onclick="Approved()" value="Approve"
+							style="background-color: #00B200;" height="20px"> <input
+							class="btn" id="btnReject" type="button" onclick="Rejected()"
+							value="Reject" style="background-color: #FF3333;"> <input
+							class="btn" id="btnBack" type="button" onclick="Back()"
+							value="Back" style="background-color: #4C4C4C;">
+					</div>
+				</div>
+
+			</form>
+		</div>
+	</div>
+	<!-- ****************************** -->
+	</div>
+</body>
+</html>

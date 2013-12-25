@@ -1,0 +1,191 @@
+﻿<!DOCTYPE HTML>
+<html>
+<head>
+
+<title>CSS3 Tabs</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+<!-- KICKSTART -->
+<script type="text/javascript" charset="utf-8"   src="cordova-2.9.0.js"></script>
+    <script type="text/javascript" charset="utf-8" src="imei.js"></script>
+<script type="text/javascript" src="datajs-1.0.3.js"></script>
+<!-- Styles !-->
+<link rel="stylesheet" href="kickstart.css" />
+<style type="text/css">
+
+body {
+	overflow-y: hidden ! important;
+	overflow-x: hidden ! important;
+	background-image: url("OTE mobile background.jpg");
+	/*background-size: cover;*/
+	background-size: contain;
+	background-repeat: no-repeat;
+	background-position: center;
+}
+
+/*--------------------*/
+#login {
+	height: 300px;
+	width: 100%;
+	margin: -150px 0 0 -10px;
+	position: absolute;
+	top: 53%;
+	z-index: 0;
+	-moz-border-radius: 3px;
+	-webkit-border-radius: 3px;
+	border-radius: 3px;
+	-webkit-box-shadow: 0 0 2px rgba(0, 0, 1110, 0.2), 0 1px 1px
+		rgba(0, 0, 0, .2), 0 3px 0 #fff, 0 4px 0 rgba(0, 0, 0, .2), 0 6px 0
+		#fff, 0 7px 0 rgba(0, 0, 0, .2);
+	-moz-box-shadow: 0 0 2px rgba(0, 0, 1110, 0.2), 1px 1px 0 rgba(0, 110, 0, .1),
+		3px 3px 0 rgba(255, 255, 255, 1), 4px 4px 0 rgba(0, 0, 110, .1), 6px 6px
+		0 rgba(255, 155, 255, 1), 7px 7px 0 rgba(0, 0, 0, .1);
+	box-shadow: 0 0 2px rgba(0, 0, 0, 0.2), 0 1px 1px rgba(0, 0, 110, .2), 0
+		3px 0 #fff, 0 4px 0 rgba(0, 0, 1110, .2), 0 6px 0 #fff, 0 7px 0
+		rgba(0, 0, 0, .2);
+}
+
+
+
+.ul_ibasr_search_style2 {
+	position: static;
+	height: 30em;
+	width: 20em;
+	padding-left: .5em;
+	padding-right: .5em;
+	padding-top: .5em;
+	font-size: small;
+	margin-left: .5em;
+	margin-bottom: .5em;
+	height: 30em;
+}
+
+html {
+	height: 100%;
+}
+
+body {
+	height: 100%;
+	margin: 0;
+	padding: 0;
+}
+/* prepares the background image to full capacity of the viewing area */
+#bg {
+	position: fixed;
+	top: 0;
+	left: 0;
+	width: 100%;
+	height: 100%;
+}
+/* places the content ontop of the background image */
+#content {
+	position: relative;
+	z-index: 1;
+}
+</style>
+<script>
+	var serviceUri = "http://37.200.224.181/ias_relay_server/client/rs_client.dll/mobdev1MBS/com.ote.vehapproval/VEH_APRVL_SET?$filter=";
+	var gotimei = "";
+	document.addEventListener("deviceready", onDeviceReady, false);
+	function popup() 
+	{ 
+
+		document.addEventListener("deviceready", onDeviceReady, false);
+		var  emp_code = "";
+		 emp_code = window.localStorage.getItem("stored_empcode");
+
+		if (emp_code != null && emp_code != "null1" && emp_code != "") 
+		{
+			window.location.href = "default.htm";	
+			
+		}
+		
+	}
+	
+
+function onDeviceReady() 
+{	
+	var emp_code = "";
+	    emp_code = window.localStorage.getItem("stored_empcode");
+	if (emp_code != null && emp_code != "null1" && emp_code != "") 
+	   { 
+		window.location.href = "default.htm";
+		}
+	
+	window.setTimeout("get();", 100);
+} 
+			
+
+	function get() {
+				
+        
+        window.plugins.imei.get(function(imei) {
+        	gotimei = imei;
+        }, function() {
+            alert("fail");
+        });
+        
+		requestUri1 = serviceUri;
+		var request1 = serviceUri + "Xuse eq 'E' and " + "Xremark " + "eq "
+				+ "'" + gotimei + "'" +  "&$format=json";
+		
+		var user_namet4 = "oteportal";
+		var pass_wordt4 = "User1234";
+		var oHeaders = {};
+		oHeaders['Authorization'] = "Basic "
+				+ btoa(user_namet4 + ":" + pass_wordt4);
+		var request = {
+			headers : oHeaders, // object that contains HTTP headers as name value pairs 
+			requestUri : request1, // OData endpoint URI 
+			method : "GET",
+			datatype : "json"
+
+		};
+		OData.read(request, function(data) {
+			//Success Callback (Received data is an Entry): 
+			if (data.results.length == 0) {
+				alert('NO Data Found');
+			}
+
+			var html2 = "";
+			for ( var i = 0; i < 1; i++) {
+				var name2 = "";
+				var emp_code2 = "";
+				 name2 = data.results[i].ENAME;
+				emp_code2 = data.results[i].Employee_Code;
+				
+			if (emp_code2 != null && emp_code2 != "null1" && emp_code2 != "") 
+			{
+				window.localStorage.setItem("stored_name", name2);
+				window.localStorage.setItem("stored_empcode", emp_code2);
+					window.location.href = "default.htm";
+				}
+				else {
+				alert("You are not authorized for Vehicle Approval");
+				navigator.app.exitApp();
+				window.location.href = "notauthorized.htm";
+				return; }
+			}
+
+		}, function(err) {
+			alert("NO Internet");
+			return;
+		});
+	}
+</script>
+
+</head>
+
+<body onload="popup()">
+
+	<div id="bg">
+		<img src="OTE mobile background.jpg" width="100%" height="100%" alt="">
+	</div>
+	<div class="ul_ibasr_search_style2">
+		<div id="login" >
+			<img src="WideModern.png" width="100%" height="100%" alt="">
+		</div>
+	</div>
+</body>
+</html>
